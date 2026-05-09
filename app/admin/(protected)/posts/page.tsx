@@ -101,7 +101,7 @@ function normalizeSearchParams(
 }
 
 function formatDateTime(value: Date | null) {
-  if (!value) {
+  if (!value || Number.isNaN(value.getTime())) {
     return "Not published";
   }
 
@@ -112,6 +112,10 @@ function formatDateTime(value: Date | null) {
 }
 
 function formatRelativeUpdate(value: Date) {
+  if (Number.isNaN(value.getTime())) {
+    return "Unknown";
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",

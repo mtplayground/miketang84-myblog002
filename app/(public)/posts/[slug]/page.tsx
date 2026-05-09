@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { unstable_cache } from "next/cache";
 
+import { coerceDate } from "@/lib/date";
 import {
   DEFAULT_AUTHOR_NAME,
   SITE_DESCRIPTION,
@@ -36,13 +37,15 @@ const getPublishedPost = unstable_cache(
 );
 
 function formatPublishedDate(value: Date | null) {
-  if (!value) {
+  const normalizedDate = coerceDate(value);
+
+  if (!normalizedDate) {
     return null;
   }
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "long",
-  }).format(value);
+  }).format(normalizedDate);
 }
 
 export const revalidate = 300;
@@ -66,6 +69,8 @@ export async function generateMetadata({
   const canonicalUrl = resolveCanonicalUrl(`/posts/${post.slug}`);
   const description = post.excerpt ?? SITE_DESCRIPTION;
   const openGraphImage = resolveOpenGraphImageUrl(post.coverImageUrl);
+  const publishedAt = coerceDate(post.publishedAt);
+  const updatedAt = coerceDate(post.updatedAt) ?? new Date();
 
   return {
     title: post.title,
@@ -79,8 +84,8 @@ export async function generateMetadata({
       siteName: SITE_NAME,
       title: post.title,
       description,
-      publishedTime: post.publishedAt?.toISOString(),
-      modifiedTime: post.updatedAt.toISOString(),
+      publishedTime: publishedAt?.toISOString(),
+      modifiedTime: updatedAt.toISOString(),
       authors: [DEFAULT_AUTHOR_NAME],
       tags: post.tags.map((tag) => tag.name),
       images: openGraphImage
@@ -111,6 +116,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const renderedHtml = await renderMarkdownToHtml(post.content);
   const publishedDate = formatPublishedDate(post.publishedAt);
+  const publishedAt = coerceDate(post.publishedAt);
+  const updatedAt = coerceDate(post.updatedAt) ?? new Date();
   const articleUrl = resolveCanonicalUrl(`/posts/${post.slug}`);
   const articleImage = resolveOpenGraphImageUrl(post.coverImageUrl);
   const articleJsonLd = {
@@ -118,8 +125,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
     "@type": "Article",
     headline: post.title,
     description: post.excerpt ?? SITE_DESCRIPTION,
-    datePublished: post.publishedAt?.toISOString(),
-    dateModified: post.updatedAt.toISOString(),
+    datePublished: publishedAt?.toISOString(),
+    dateModified: updatedAt.toISOString(),
     author: {
       "@type": "Person",
       name: DEFAULT_AUTHOR_NAME,

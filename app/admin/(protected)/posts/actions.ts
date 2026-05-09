@@ -110,6 +110,8 @@ export async function savePostAction(
 ): Promise<PostFormState> {
   await requireAdminSession();
 
+  let redirectTo: string | null = null;
+
   try {
     const intent = resolveIntent(formData);
     const fallbackStatus = intent === "publish" ? "PUBLISHED" : "DRAFT";
@@ -125,75 +127,73 @@ export async function savePostAction(
       revalidatePublishedContent({
         nextPost: createdPost,
       });
-      redirect(`/admin/posts/${createdPost.id}`);
+      redirectTo = `/admin/posts/${createdPost.id}`;
+    } else {
+      const existingPost = await getPostById(postId);
+
+      if (!existingPost) {
+        throw new Error("Post not found.");
+      }
+
+      if (intent === "publish") {
+        const updatedPost = await updatePost(postId, {
+          content: postInput.content,
+          coverImageUrl: postInput.coverImageUrl,
+          excerpt: postInput.excerpt,
+          publishedAt: postInput.publishedAt,
+          regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
+          slug: postInput.slug ?? undefined,
+          status: "PUBLISHED",
+          tags: postInput.tags,
+          title: postInput.title,
+        });
+
+        revalidateAdminPostPaths(updatedPost.id);
+        revalidatePublishedContent({
+          nextPost: updatedPost,
+          previousPost: existingPost,
+        });
+        redirectTo = `/admin/posts/${updatedPost.id}`;
+      } else if (intent === "unpublish") {
+        const updatedPost = await updatePost(postId, {
+          content: postInput.content,
+          coverImageUrl: postInput.coverImageUrl,
+          excerpt: postInput.excerpt,
+          publishedAt: null,
+          regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
+          slug: postInput.slug ?? undefined,
+          status: "DRAFT",
+          tags: postInput.tags,
+          title: postInput.title,
+        });
+
+        revalidateAdminPostPaths(updatedPost.id);
+        revalidatePublishedContent({
+          nextPost: updatedPost,
+          previousPost: existingPost,
+        });
+        redirectTo = `/admin/posts/${updatedPost.id}`;
+      } else {
+        const updatedPost = await updatePost(postId, {
+          content: postInput.content,
+          coverImageUrl: postInput.coverImageUrl,
+          excerpt: postInput.excerpt,
+          publishedAt: postInput.publishedAt,
+          regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
+          slug: postInput.slug ?? undefined,
+          status: postInput.status,
+          tags: postInput.tags,
+          title: postInput.title,
+        });
+
+        revalidateAdminPostPaths(updatedPost.id);
+        revalidatePublishedContent({
+          nextPost: updatedPost,
+          previousPost: existingPost,
+        });
+        redirectTo = `/admin/posts/${updatedPost.id}`;
+      }
     }
-
-    const existingPost = await getPostById(postId);
-
-    if (!existingPost) {
-      throw new Error("Post not found.");
-    }
-
-    if (intent === "publish") {
-      const updatedPost = await updatePost(postId, {
-        content: postInput.content,
-        coverImageUrl: postInput.coverImageUrl,
-        excerpt: postInput.excerpt,
-        publishedAt: postInput.publishedAt,
-        regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
-        slug: postInput.slug ?? undefined,
-        status: "PUBLISHED",
-        tags: postInput.tags,
-        title: postInput.title,
-      });
-
-      revalidateAdminPostPaths(updatedPost.id);
-      revalidatePublishedContent({
-        nextPost: updatedPost,
-        previousPost: existingPost,
-      });
-      redirect(`/admin/posts/${updatedPost.id}`);
-    }
-
-    if (intent === "unpublish") {
-      const updatedPost = await updatePost(postId, {
-        content: postInput.content,
-        coverImageUrl: postInput.coverImageUrl,
-        excerpt: postInput.excerpt,
-        publishedAt: null,
-        regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
-        slug: postInput.slug ?? undefined,
-        status: "DRAFT",
-        tags: postInput.tags,
-        title: postInput.title,
-      });
-
-      revalidateAdminPostPaths(updatedPost.id);
-      revalidatePublishedContent({
-        nextPost: updatedPost,
-        previousPost: existingPost,
-      });
-      redirect(`/admin/posts/${updatedPost.id}`);
-    }
-
-    const updatedPost = await updatePost(postId, {
-      content: postInput.content,
-      coverImageUrl: postInput.coverImageUrl,
-      excerpt: postInput.excerpt,
-      publishedAt: postInput.publishedAt,
-      regenerateSlugFromTitle: postInput.regenerateSlugFromTitle,
-      slug: postInput.slug ?? undefined,
-      status: postInput.status,
-      tags: postInput.tags,
-      title: postInput.title,
-    });
-
-    revalidateAdminPostPaths(updatedPost.id);
-    revalidatePublishedContent({
-      nextPost: updatedPost,
-      previousPost: existingPost,
-    });
-    redirect(`/admin/posts/${updatedPost.id}`);
   } catch (error) {
     return {
       error:
@@ -202,6 +202,14 @@ export async function savePostAction(
           : "Unable to save the post right now.",
     };
   }
+
+  if (redirectTo) {
+    redirect(redirectTo);
+  }
+
+  return {
+    error: null,
+  };
 }
 
 export async function deletePostAction(postId: string) {

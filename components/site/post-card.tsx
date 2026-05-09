@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { coerceDate } from "@/lib/date";
 import { type PostRecord } from "@/lib/posts";
 
 type PostCardProps = {
@@ -9,13 +10,15 @@ type PostCardProps = {
 };
 
 function formatPublishedDate(value: Date | null) {
-  if (!value) {
+  const normalizedDate = coerceDate(value);
+
+  if (!normalizedDate) {
     return "Draft";
   }
 
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-  }).format(value);
+  }).format(normalizedDate);
 }
 
 export function PostCard({ post }: PostCardProps) {
@@ -76,4 +79,3 @@ export function PostCard({ post }: PostCardProps) {
     </article>
   );
 }
-

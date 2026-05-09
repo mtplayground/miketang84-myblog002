@@ -14,10 +14,6 @@ export type LoginActionState = {
   error: string | null;
 };
 
-export const initialLoginActionState: LoginActionState = {
-  error: null,
-};
-
 function getSafeCallbackUrl(formData: FormData) {
   const callbackUrl = formData.get("callbackUrl");
 
@@ -67,5 +63,7 @@ export async function loginAction(
     throw error;
   }
 
-  return initialLoginActionState;
+  return {
+    error: null,
+  };
 }
