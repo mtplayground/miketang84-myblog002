@@ -29,3 +29,7 @@ playwright-report/
 test-results/
 .gitkeep
 .progress
+.admin_credentials
+.deploy_url
+verify-screenshot.png
+.db_decision
