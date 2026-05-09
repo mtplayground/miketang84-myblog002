@@ -18,6 +18,16 @@ export const initialLoginActionState: LoginActionState = {
   error: null,
 };
 
+function getSafeCallbackUrl(formData: FormData) {
+  const callbackUrl = formData.get("callbackUrl");
+
+  if (typeof callbackUrl === "string" && callbackUrl.startsWith("/admin")) {
+    return callbackUrl;
+  }
+
+  return "/admin";
+}
+
 export async function loginAction(
   _previousState: LoginActionState,
   formData: FormData,
@@ -33,11 +43,13 @@ export async function loginAction(
     };
   }
 
+  const callbackUrl = getSafeCallbackUrl(formData);
+
   try {
     await signIn("credentials", {
       username: parsedCredentials.data.username,
       password: parsedCredentials.data.password,
-      redirectTo: "/admin",
+      redirectTo: callbackUrl,
     });
   } catch (error) {
     if (error instanceof AuthError) {

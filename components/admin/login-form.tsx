@@ -27,7 +27,11 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+type LoginFormProps = {
+  callbackUrl?: string;
+};
+
+export function LoginForm({ callbackUrl = "/admin" }: LoginFormProps) {
   const [state, formAction] = useActionState(
     loginAction,
     initialLoginActionState,
@@ -45,6 +49,8 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form action={formAction} className="space-y-5">
+          <input name="callbackUrl" type="hidden" value={callbackUrl} />
+
           <div className="space-y-2">
             <label
               className="text-foreground text-sm font-medium"

@@ -3,11 +3,29 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { LoginForm } from "@/components/admin/login-form";
 
-export default async function AdminLoginPage() {
+type AdminLoginPageProps = {
+  searchParams?: Promise<{
+    callbackUrl?: string;
+  }>;
+};
+
+function getSafeCallbackUrl(callbackUrl: string | undefined) {
+  if (callbackUrl?.startsWith("/admin")) {
+    return callbackUrl;
+  }
+
+  return "/admin";
+}
+
+export default async function AdminLoginPage({
+  searchParams,
+}: AdminLoginPageProps) {
   const session = await auth();
+  const resolvedSearchParams = await searchParams;
+  const callbackUrl = getSafeCallbackUrl(resolvedSearchParams?.callbackUrl);
 
   if (session?.user?.role === "admin") {
-    redirect("/admin");
+    redirect(callbackUrl);
   }
 
   return (
@@ -31,7 +49,7 @@ export default async function AdminLoginPage() {
             </div>
           </div>
 
-          <LoginForm />
+          <LoginForm callbackUrl={callbackUrl} />
         </div>
       </section>
     </main>
