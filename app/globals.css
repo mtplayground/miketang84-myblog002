@@ -1,0 +1,82 @@
+:root {
+  color-scheme: light;
+  font-family:
+    "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: #f4efe6;
+  color: #171717;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.95), transparent 40%),
+    linear-gradient(180deg, #f4efe6 0%, #e7ddcf 100%);
+}
+
+a {
+  color: inherit;
+}
+
+.page-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 2rem;
+  place-items: center;
+}
+
+.hero-card {
+  width: min(100%, 48rem);
+  padding: 3rem;
+  border: 1px solid rgba(23, 23, 23, 0.08);
+  border-radius: 1.5rem;
+  background: rgba(255, 250, 244, 0.86);
+  box-shadow: 0 24px 80px rgba(66, 47, 15, 0.12);
+}
+
+.hero-card h1 {
+  margin: 0;
+  font-size: clamp(2.8rem, 7vw, 5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.eyebrow {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a5a16;
+}
+
+.lede {
+  max-width: 38rem;
+  margin: 1.5rem 0 0;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  color: #473d30;
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding: 1rem;
+  }
+
+  .hero-card {
+    padding: 2rem;
+  }
+
+  .lede {
+    font-size: 1rem;
+  }
+}
