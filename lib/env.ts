@@ -73,10 +73,18 @@ export const serverEnvSchema = z.object({
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
+export const authEnvSchema = serverEnvSchema.pick({
+  NEXTAUTH_SECRET: true,
+  ADMIN_USERNAME: true,
+  ADMIN_PASSWORD_HASH: true,
+});
+
+export type AuthEnv = z.infer<typeof authEnvSchema>;
 
 type EnvSource = Record<string, string | undefined>;
 
 let cachedProcessEnv: ServerEnv | undefined;
+let cachedAuthEnv: AuthEnv | undefined;
 
 function formatEnvErrors(error: z.ZodError) {
   return error.issues
@@ -102,6 +110,26 @@ export function loadServerEnv(source: EnvSource = process.env): ServerEnv {
 
   if (source === process.env) {
     cachedProcessEnv = parsedEnv.data;
+  }
+
+  return parsedEnv.data;
+}
+
+export function loadAuthEnv(source: EnvSource = process.env): AuthEnv {
+  if (source === process.env && cachedAuthEnv) {
+    return cachedAuthEnv;
+  }
+
+  const parsedEnv = authEnvSchema.safeParse(source);
+
+  if (!parsedEnv.success) {
+    throw new Error(
+      `Invalid authentication environment variables:\n${formatEnvErrors(parsedEnv.error)}`,
+    );
+  }
+
+  if (source === process.env) {
+    cachedAuthEnv = parsedEnv.data;
   }
 
   return parsedEnv.data;
