@@ -1,10 +1,18 @@
 /* eslint-disable @next/next/no-img-element */
 
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { unstable_cache } from "next/cache";
 
+import {
+  DEFAULT_AUTHOR_NAME,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  resolveCanonicalUrl,
+  resolveOpenGraphImageUrl,
+} from "@/lib/site";
 import { getPostBySlug } from "@/lib/posts";
 import { REVALIDATION_TAGS } from "@/lib/revalidate";
 import { renderMarkdownToHtml } from "@/lib/markdown";
@@ -39,6 +47,60 @@ function formatPublishedDate(value: Date | null) {
 
 export const revalidate = 300;
 
+export async function generateMetadata({
+  params,
+}: PostDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPublishedPost(slug);
+
+  if (!post || post.status !== "PUBLISHED") {
+    return {
+      title: "Post not found",
+      robots: {
+        follow: false,
+        index: false,
+      },
+    };
+  }
+
+  const canonicalUrl = resolveCanonicalUrl(`/posts/${post.slug}`);
+  const description = post.excerpt ?? SITE_DESCRIPTION;
+  const openGraphImage = resolveOpenGraphImageUrl(post.coverImageUrl);
+
+  return {
+    title: post.title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      type: "article",
+      url: canonicalUrl,
+      siteName: SITE_NAME,
+      title: post.title,
+      description,
+      publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt.toISOString(),
+      authors: [DEFAULT_AUTHOR_NAME],
+      tags: post.tags.map((tag) => tag.name),
+      images: openGraphImage
+        ? [
+            {
+              url: openGraphImage,
+              alt: post.title,
+            },
+          ]
+        : undefined,
+    },
+    twitter: {
+      card: openGraphImage ? "summary_large_image" : "summary",
+      title: post.title,
+      description,
+      images: openGraphImage ? [openGraphImage] : undefined,
+    },
+  };
+}
+
 export default async function PostDetailPage({ params }: PostDetailPageProps) {
   const { slug } = await params;
   const post = await getPublishedPost(slug);
@@ -49,9 +111,36 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
 
   const renderedHtml = await renderMarkdownToHtml(post.content);
   const publishedDate = formatPublishedDate(post.publishedAt);
+  const articleUrl = resolveCanonicalUrl(`/posts/${post.slug}`);
+  const articleImage = resolveOpenGraphImageUrl(post.coverImageUrl);
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt ?? SITE_DESCRIPTION,
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    author: {
+      "@type": "Person",
+      name: DEFAULT_AUTHOR_NAME,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+    },
+    mainEntityOfPage: articleUrl,
+    image: articleImage ? [articleImage.toString()] : undefined,
+    keywords: post.tags.map((tag) => tag.name),
+  };
 
   return (
     <article className="relative overflow-hidden">
+      <script
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(articleJsonLd),
+        }}
+        type="application/ld+json"
+      />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[28rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),transparent_60%)] dark:bg-[radial-gradient(circle_at_top,rgba(210,180,140,0.12),transparent_52%)]" />
 
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-10 px-4 py-16 sm:px-6 lg:px-8">
