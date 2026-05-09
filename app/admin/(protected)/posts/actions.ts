@@ -9,8 +9,10 @@ import {
   type PostStatus,
   createPost,
   deletePost,
+  getPostById,
   updatePost,
 } from "@/lib/posts";
+import { revalidatePublishedContent } from "@/lib/revalidate";
 
 export type PostFormState = {
   error: string | null;
@@ -120,7 +122,16 @@ export async function savePostAction(
       });
 
       revalidateAdminPostPaths(createdPost.id);
+      revalidatePublishedContent({
+        nextPost: createdPost,
+      });
       redirect(`/admin/posts/${createdPost.id}`);
+    }
+
+    const existingPost = await getPostById(postId);
+
+    if (!existingPost) {
+      throw new Error("Post not found.");
     }
 
     if (intent === "publish") {
@@ -137,6 +148,10 @@ export async function savePostAction(
       });
 
       revalidateAdminPostPaths(updatedPost.id);
+      revalidatePublishedContent({
+        nextPost: updatedPost,
+        previousPost: existingPost,
+      });
       redirect(`/admin/posts/${updatedPost.id}`);
     }
 
@@ -154,6 +169,10 @@ export async function savePostAction(
       });
 
       revalidateAdminPostPaths(updatedPost.id);
+      revalidatePublishedContent({
+        nextPost: updatedPost,
+        previousPost: existingPost,
+      });
       redirect(`/admin/posts/${updatedPost.id}`);
     }
 
@@ -170,6 +189,10 @@ export async function savePostAction(
     });
 
     revalidateAdminPostPaths(updatedPost.id);
+    revalidatePublishedContent({
+      nextPost: updatedPost,
+      previousPost: existingPost,
+    });
     redirect(`/admin/posts/${updatedPost.id}`);
   } catch (error) {
     return {
@@ -184,7 +207,11 @@ export async function savePostAction(
 export async function deletePostAction(postId: string) {
   await requireAdminSession();
 
+  const existingPost = await getPostById(postId);
   await deletePost(postId);
   revalidateAdminPostPaths(postId);
+  revalidatePublishedContent({
+    previousPost: existingPost,
+  });
   redirect("/admin/posts");
 }
