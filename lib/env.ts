@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-const emptyStringToUndefined = (value: unknown) => {
-  if (typeof value !== "string") {
-    return value;
-  }
-
-  const trimmedValue = value.trim();
-  return trimmedValue === "" ? undefined : trimmedValue;
-};
-
 const stringBoolean = z.preprocess((value) => {
   if (typeof value !== "string") {
     return value;
@@ -31,11 +22,6 @@ const stringBoolean = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
-const optionalUrl = z.preprocess(
-  emptyStringToUndefined,
-  z.string().url().optional(),
-);
-
 const databaseUrl = z
   .string()
   .trim()
@@ -48,6 +34,16 @@ const databaseUrl = z
     },
   );
 
+const s3EnvFields = {
+  S3_BUCKET: z.string().trim().min(1, "S3_BUCKET is required."),
+  S3_REGION: z.string().trim().min(1).default("auto"),
+  S3_ACCESS_KEY: z.string().trim().min(1, "S3_ACCESS_KEY is required."),
+  S3_SECRET_KEY: z.string().trim().min(1, "S3_SECRET_KEY is required."),
+  S3_ENDPOINT: z.string().trim().url("S3_ENDPOINT must be a valid URL."),
+  S3_PUBLIC_URL: z.string().trim().url("S3_PUBLIC_URL must be a valid URL."),
+  S3_FORCE_PATH_STYLE: stringBoolean.optional().default(false),
+};
+
 export const serverEnvSchema = z.object({
   DATABASE_URL: databaseUrl,
   NEXTAUTH_SECRET: z
@@ -59,16 +55,7 @@ export const serverEnvSchema = z.object({
     .string()
     .trim()
     .min(20, "ADMIN_PASSWORD_HASH must be a non-empty password hash."),
-  S3_BUCKET: z.string().trim().min(1, "S3_BUCKET is required."),
-  S3_REGION: z.string().trim().min(1, "S3_REGION is required."),
-  S3_ACCESS_KEY_ID: z.string().trim().min(1, "S3_ACCESS_KEY_ID is required."),
-  S3_SECRET_ACCESS_KEY: z
-    .string()
-    .trim()
-    .min(1, "S3_SECRET_ACCESS_KEY is required."),
-  S3_ENDPOINT: optionalUrl,
-  S3_PUBLIC_BASE_URL: optionalUrl,
-  S3_FORCE_PATH_STYLE: stringBoolean.optional().default(false),
+  ...s3EnvFields,
   SITE_URL: z.string().trim().url("SITE_URL must be a valid absolute URL."),
 });
 
@@ -80,11 +67,15 @@ export const authEnvSchema = serverEnvSchema.pick({
 });
 
 export type AuthEnv = z.infer<typeof authEnvSchema>;
+export const s3EnvSchema = z.object(s3EnvFields);
+
+export type S3Env = z.infer<typeof s3EnvSchema>;
 
 type EnvSource = Record<string, string | undefined>;
 
 let cachedProcessEnv: ServerEnv | undefined;
 let cachedAuthEnv: AuthEnv | undefined;
+let cachedS3Env: S3Env | undefined;
 
 function formatEnvErrors(error: z.ZodError) {
   return error.issues
@@ -95,12 +86,22 @@ function formatEnvErrors(error: z.ZodError) {
     .join("\n");
 }
 
+function normalizeServerEnvSource(source: EnvSource) {
+  return {
+    ...source,
+    S3_ACCESS_KEY: source.S3_ACCESS_KEY ?? source.S3_ACCESS_KEY_ID,
+    S3_SECRET_KEY: source.S3_SECRET_KEY ?? source.S3_SECRET_ACCESS_KEY,
+    S3_PUBLIC_URL: source.S3_PUBLIC_URL ?? source.S3_PUBLIC_BASE_URL,
+    S3_REGION: source.S3_REGION ?? "auto",
+  };
+}
+
 export function loadServerEnv(source: EnvSource = process.env): ServerEnv {
   if (source === process.env && cachedProcessEnv) {
     return cachedProcessEnv;
   }
 
-  const parsedEnv = serverEnvSchema.safeParse(source);
+  const parsedEnv = serverEnvSchema.safeParse(normalizeServerEnvSource(source));
 
   if (!parsedEnv.success) {
     throw new Error(
@@ -130,6 +131,26 @@ export function loadAuthEnv(source: EnvSource = process.env): AuthEnv {
 
   if (source === process.env) {
     cachedAuthEnv = parsedEnv.data;
+  }
+
+  return parsedEnv.data;
+}
+
+export function loadS3Env(source: EnvSource = process.env): S3Env {
+  if (source === process.env && cachedS3Env) {
+    return cachedS3Env;
+  }
+
+  const parsedEnv = s3EnvSchema.safeParse(normalizeServerEnvSource(source));
+
+  if (!parsedEnv.success) {
+    throw new Error(
+      `Invalid S3 environment variables:\n${formatEnvErrors(parsedEnv.error)}`,
+    );
+  }
+
+  if (source === process.env) {
+    cachedS3Env = parsedEnv.data;
   }
 
   return parsedEnv.data;
