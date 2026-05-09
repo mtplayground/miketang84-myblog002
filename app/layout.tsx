@@ -4,6 +4,12 @@ import type { ReactNode } from "react";
 import { Geist } from "next/font/google";
 import { cookies } from "next/headers";
 
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  resolveCanonicalUrl,
+  resolveSiteUrl,
+} from "@/lib/site";
 import { THEME_COOKIE_NAME, resolveTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -14,8 +20,27 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "myblog002",
-  description: "A self-hosted blog built with Next.js 15.",
+  metadataBase: resolveSiteUrl(),
+  title: {
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: resolveCanonicalUrl("/"),
+  },
+  openGraph: {
+    type: "website",
+    url: resolveCanonicalUrl("/"),
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 type RootLayoutProps = {
