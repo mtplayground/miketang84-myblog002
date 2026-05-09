@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 
 const authConfig = {
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   providers: [],
   session: {
     strategy: "jwt",
