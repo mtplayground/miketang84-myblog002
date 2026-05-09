@@ -32,6 +32,7 @@ export function LoginForm() {
     loginAction,
     initialLoginActionState,
   );
+  const errorId = state.error ? "login-form-error" : undefined;
 
   return (
     <Card className="border-border/70 bg-card/95 w-full max-w-md border shadow-[0_24px_80px_rgba(73,49,19,0.14)] backdrop-blur">
@@ -54,6 +55,9 @@ export function LoginForm() {
             <Input
               autoCapitalize="none"
               autoComplete="username"
+              autoFocus
+              aria-describedby={errorId}
+              aria-invalid={state.error ? true : undefined}
               id="username"
               name="username"
               placeholder="admin"
@@ -70,6 +74,8 @@ export function LoginForm() {
             </label>
             <Input
               autoComplete="current-password"
+              aria-describedby={errorId}
+              aria-invalid={state.error ? true : undefined}
               id="password"
               name="password"
               required
@@ -81,6 +87,7 @@ export function LoginForm() {
             <p
               aria-live="polite"
               className="border-destructive/25 bg-destructive/10 text-destructive rounded-lg border px-3 py-2 text-sm"
+              id={errorId}
               role="alert"
             >
               {state.error}
