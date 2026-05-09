@@ -621,6 +621,32 @@ export async function listTags() {
   return tags.map((tag) => mapTagRecord(tag, tag._count.posts));
 }
 
+export async function listPublicTags() {
+  const tags = await prisma.tag.findMany({
+    include: {
+      posts: {
+        select: {
+          postId: true,
+        },
+        where: {
+          post: {
+            status: PostStatus.PUBLISHED,
+          },
+        },
+      },
+    },
+    orderBy: [
+      {
+        name: "asc",
+      },
+    ],
+  });
+
+  return tags
+    .map((tag) => mapTagRecord(tag, tag.posts.length))
+    .filter((tag) => (tag.postCount ?? 0) > 0);
+}
+
 export async function getTagBySlug(tagSlug: string) {
   const normalizedTagSlug = normalizeRequiredString(tagSlug, "Tag slug");
   const tag = await prisma.tag.findUnique({
