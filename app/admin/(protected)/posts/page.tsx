@@ -359,7 +359,7 @@ export default async function AdminPostsPage({
                             variant: "outline",
                           }),
                         )}
-                        href={`/admin/posts/${post.id}/edit`}
+                        href={`/admin/posts/${post.id}`}
                       >
                         Edit
                       </Link>
@@ -374,4 +374,3 @@ export default async function AdminPostsPage({
     </div>
   );
 }
-

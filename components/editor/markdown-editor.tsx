@@ -5,7 +5,6 @@ import {
   type ReactNode,
   useDeferredValue,
   useEffect,
-  useEffectEvent,
   useId,
   useRef,
   useState,
@@ -132,10 +131,6 @@ export function MarkdownEditor({
   const deferredMarkdown = useDeferredValue(markdown);
   const initialContent = normalizeInitialMarkdown(initialMarkdown);
 
-  const emitChange = useEffectEvent((nextMarkdown: string) => {
-    onChange?.(nextMarkdown);
-  });
-
   const editor = useEditor({
     content: initialContent,
     contentType: "markdown",
@@ -170,7 +165,7 @@ export function MarkdownEditor({
     onCreate({ editor }) {
       const nextMarkdown = editor.getMarkdown();
       setMarkdown(nextMarkdown);
-      emitChange(nextMarkdown);
+      onChange?.(nextMarkdown);
     },
     onUpdate({ editor }) {
       const nextMarkdown = editor.getMarkdown();
@@ -178,9 +173,9 @@ export function MarkdownEditor({
       startTransition(() => {
         setMarkdown(nextMarkdown);
       });
-      emitChange(nextMarkdown);
+      onChange?.(nextMarkdown);
     },
-  });
+  }, [onChange]);
 
   useEffect(() => {
     if (!editor) {
