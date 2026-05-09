@@ -19,6 +19,10 @@ const navLinks = [
     label: "About",
   },
   {
+    href: "/rss.xml",
+    label: "RSS",
+  },
+  {
     href: "/admin/login",
     label: "Admin",
   },

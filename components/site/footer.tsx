@@ -26,6 +26,12 @@ export function SiteFooter() {
           </Link>
           <Link
             className="transition hover:text-stone-900 dark:hover:text-stone-50"
+            href="/rss.xml"
+          >
+            RSS
+          </Link>
+          <Link
+            className="transition hover:text-stone-900 dark:hover:text-stone-50"
             href="/admin/login"
           >
             Admin
