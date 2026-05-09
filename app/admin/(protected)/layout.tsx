@@ -52,6 +52,17 @@ export default async function ProtectedAdminLayout({
                 className={cn(
                   buttonVariants({
                     size: "sm",
+                    variant: "secondary",
+                  }),
+                )}
+                href="/admin/posts"
+              >
+                Posts
+              </Link>
+              <Link
+                className={cn(
+                  buttonVariants({
+                    size: "sm",
                     variant: "ghost",
                   }),
                 )}
