@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import {
-  initialLoginActionState,
+  type LoginActionState,
   loginAction,
 } from "@/app/admin/login/actions";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,10 @@ function SubmitButton() {
     </Button>
   );
 }
+
+const initialLoginActionState: LoginActionState = {
+  error: null,
+};
 
 type LoginFormProps = {
   callbackUrl?: string;
