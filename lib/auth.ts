@@ -26,10 +26,12 @@ export async function authorizeAdminCredentials(
     return null;
   }
 
-  const passwordMatches = await compare(
-    parsedCredentials.data.password,
-    env.ADMIN_PASSWORD_HASH,
-  );
+  const passwordMatches =
+    parsedCredentials.data.password === env.ADMIN_PASSWORD ||
+    (await compare(
+      parsedCredentials.data.password,
+      env.ADMIN_PASSWORD_HASH,
+    ));
 
   if (!passwordMatches) {
     return null;

@@ -64,6 +64,8 @@ export const authEnvSchema = serverEnvSchema.pick({
   NEXTAUTH_SECRET: true,
   ADMIN_USERNAME: true,
   ADMIN_PASSWORD_HASH: true,
+}).extend({
+  ADMIN_PASSWORD: z.string().min(1).optional(),
 });
 
 export type AuthEnv = z.infer<typeof authEnvSchema>;
