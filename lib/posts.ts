@@ -72,9 +72,12 @@ export type ListPostsOptions = {
   page?: number;
   pageSize?: number;
   search?: string;
+  sort?: PostSortOption;
   status?: PostStatus | "all";
   tagSlug?: string;
 };
+
+export type ListAllPostsOptions = Omit<ListPostsOptions, "page" | "pageSize">;
 
 export type ListPostsResult = {
   page: number;
@@ -83,6 +86,14 @@ export type ListPostsResult = {
   posts: PostRecord[];
   totalCount: number;
 };
+
+export type PostSortOption =
+  | "created-desc"
+  | "published-desc"
+  | "title-asc"
+  | "title-desc"
+  | "updated-asc"
+  | "updated-desc";
 
 export type CreatePostInput = {
   content: string;
@@ -420,6 +431,51 @@ function buildPostWhereClause(options: ListPostsOptions = {}): Prisma.PostWhereI
   };
 }
 
+function buildPostOrderBy(sort: PostSortOption = "updated-desc") {
+  switch (sort) {
+    case "updated-asc":
+      return [
+        {
+          updatedAt: "asc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+    case "created-desc":
+      return [
+        {
+          createdAt: "desc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+    case "published-desc":
+      return [
+        {
+          publishedAt: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+    case "title-asc":
+      return [
+        {
+          title: "asc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+    case "title-desc":
+      return [
+        {
+          title: "desc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+    case "updated-desc":
+    default:
+      return [
+        {
+          updatedAt: "desc",
+        },
+      ] satisfies Prisma.PostOrderByWithRelationInput[];
+  }
+}
+
 function resolveStatusFields(
   nextStatus: PostStatus,
   publishedAtInput: Date | null | string | undefined,
@@ -479,6 +535,7 @@ export async function listPosts(
     options.pageSize,
   );
   const where = buildPostWhereClause(options);
+  const orderBy = buildPostOrderBy(options.sort);
 
   const [totalCount, posts] = await prisma.$transaction([
     prisma.post.count({
@@ -487,14 +544,7 @@ export async function listPosts(
     prisma.post.findMany({
       ...postWithTagsArgs,
       where,
-      orderBy: [
-        {
-          publishedAt: "desc",
-        },
-        {
-          createdAt: "desc",
-        },
-      ],
+      orderBy,
       skip,
       take: pageSize,
     }),
@@ -507,6 +557,18 @@ export async function listPosts(
     posts: posts.map(mapPostRecord),
     totalCount,
   };
+}
+
+export async function listAllPosts(
+  options: ListAllPostsOptions = {},
+): Promise<PostRecord[]> {
+  const posts = await prisma.post.findMany({
+    ...postWithTagsArgs,
+    where: buildPostWhereClause(options),
+    orderBy: buildPostOrderBy(options.sort),
+  });
+
+  return posts.map(mapPostRecord);
 }
 
 export async function getPostById(postId: string) {
