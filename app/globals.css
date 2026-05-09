@@ -38,6 +38,9 @@
   --sidebar-accent-foreground: oklch(0.34 0.03 43.3);
   --sidebar-border: oklch(0.88 0.02 76.2);
   --sidebar-ring: oklch(0.72 0.07 61.3);
+  --page-glow:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.96), transparent 42%);
+  --page-surface: linear-gradient(180deg, #f6efe2 0%, #e5d8c5 100%);
 }
 
 * {
@@ -51,9 +54,11 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.96), transparent 42%),
-    linear-gradient(180deg, #f6efe2 0%, #e5d8c5 100%);
+  background: var(--page-glow), var(--page-surface);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    background-image 180ms ease;
 }
 
 a {
@@ -135,6 +140,9 @@ a {
   --sidebar-accent-foreground: oklch(0.95 0.015 83.3);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.68 0.06 61.2);
+  --page-glow:
+    radial-gradient(circle at top, rgba(227, 184, 130, 0.12), transparent 36%);
+  --page-surface: linear-gradient(180deg, #1c1714 0%, #120f0d 100%);
 }
 
 @layer base {
