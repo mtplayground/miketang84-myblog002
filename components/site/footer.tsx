@@ -20,6 +20,12 @@ export function SiteFooter() {
           </Link>
           <Link
             className="transition hover:text-stone-900 dark:hover:text-stone-50"
+            href="/about"
+          >
+            About
+          </Link>
+          <Link
+            className="transition hover:text-stone-900 dark:hover:text-stone-50"
             href="/admin/login"
           >
             Admin
@@ -30,4 +36,3 @@ export function SiteFooter() {
     </footer>
   );
 }
-

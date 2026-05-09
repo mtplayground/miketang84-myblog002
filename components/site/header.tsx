@@ -15,6 +15,10 @@ const navLinks = [
     label: "Home",
   },
   {
+    href: "/about",
+    label: "About",
+  },
+  {
     href: "/admin/login",
     label: "Admin",
   },
@@ -58,4 +62,3 @@ export function SiteHeader({ theme }: SiteHeaderProps) {
     </header>
   );
 }
-
